@@ -4,13 +4,20 @@
 # ------
 # functional curve algebra (created by auxilium)
 #
-# Author:
-# Version:  0.1, copyright Thursday, 10 October 2024
-# Website:  https://github.com//curves
+# Author:   sonntagsgesicht
+# Version:  0.1.1, copyright Thursday, 10 October 2024
+# Website:  https://github.com/sonntagsgesicht/curves
 # License:  Apache License 2.0 (see LICENSE file)
 
 
-from matplotlib import use, pyplot as plt
+from warnings import warn
+
+try:
+    from matplotlib import use, pyplot as plt
+except ImportError:
+    warn("using plotter to plot curves requires 'matplotlib' "
+         "consider 'pip install matplotlib'")
+
 
 # import matplotlib
 # matplotlib.use('WebAgg')
