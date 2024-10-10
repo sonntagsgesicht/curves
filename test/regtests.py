@@ -11,23 +11,28 @@
 # License:  Apache License 2.0 (see LICENSE file)
 
 
-from os import getcwd
-from os.path import basename, split
 from regtest import RegressionTestCase
-
-pkg = __import__(basename(getcwd()))
-
 
 # first run will build reference values (stored in files)
 # second run will test against those reference values
 # to update reference values simply remove the according files
 
-class FirstRegTests(RegressionTestCase):
+from curves import X
+from curves.plot import lin
 
-    def test_sample_almost_equal(self):
-        for i in range(-10, 100):
-            self.assertAlmostRegressiveEqual(pkg.Line(0, 1).y(x=0.5 * i))
 
-    def test_sample_equal(self):
-        for i in range(-10, 100):
-            self.assertAlmostRegressiveEqual(0 < pkg.Line(0, 1).y(x=0.5 * i))
+class CurveRegTests(RegressionTestCase):
+
+    def setUp(self):
+        self.x = lin(-10, 10)
+
+    def test_X(self):
+
+        def f(x):
+            return 1 + 2 * x + 3 * x ** 2 + -(x / 2 - 1)
+
+        p = 1 + 2 * X + 3 * X ** 2 + -(X / 2 - 1)
+
+        for x in self.x:
+            self.assertAlmostRegressiveEqual(f(x))
+            self.assertAlmostRegressiveEqual(p(x))
