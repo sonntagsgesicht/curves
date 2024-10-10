@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+
+# curves
+# ------
+# functional curve algebra (created by auxilium)
+#
+# Author:
+# Version:  0.1, copyright Thursday, 10 October 2024
+# Website:  https://github.com//curves
+# License:  Apache License 2.0 (see LICENSE file)
+
 
 from .numerics import finite_difference, quadrature, EPS
 

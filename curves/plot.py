@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 
-# yieldcurves
-# -----------
-# A Python library for financial yield curves.
+# curves
+# ------
+# functional curve algebra (created by auxilium)
 #
-# Author:   sonntagsgesicht
-# Version:  0.2.2, copyright Thursday, 22 August 2024
-# Website:  https://github.com/sonntagsgesicht/yieldcurves
+# Author:
+# Version:  0.1, copyright Thursday, 10 October 2024
+# Website:  https://github.com//curves
 # License:  Apache License 2.0 (see LICENSE file)
+
 
 from matplotlib import use, pyplot as plt
 
