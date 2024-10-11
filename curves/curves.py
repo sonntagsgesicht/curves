@@ -245,7 +245,8 @@ class Curve:
 
     def __eq__(self, other):
         return (repr(self) == repr(other)
-                and type(self) == type(other) and self.curve == other.curve)
+                and type(self) == type(other)   # noqa E721
+                and self.curve == other.curve)
 
     def __copy__(self):
         new = self.__class__(self.curve, _op=self._op, _other=self._other)
