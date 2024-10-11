@@ -20,13 +20,12 @@ def finite_difference(f, x, h=EPS):
     Numerically differentiate the function f at point x
     using the finite difference method.
 
-    Parameters:
-    f (function): The function to differentiate.
-    x (float): The point at which to differentiate the function.
-    h (float, optional): The step size to use. Default is 1e-7.
 
-    Returns:
-    float: The numerical derivative of f at point x.
+    :param f: (function) The function to differentiate.
+    :param x: (float) The point at which to differentiate the function.
+    :param h: (float, optional) The step size to use. Default is 1e-7.
+
+    :return: float: The numerical derivative of f at point x.
     """
     return (f(x + h) - f(x - h)) / (2 * h)
 
@@ -36,14 +35,12 @@ def trapezoidal_rule(f, a, b, n):
     Numerically integrate the function f from a to b
     using the trapezoidal rule with n intervals.
 
-    Parameters:
-    f (function): The function to integrate.
-    a (float): The start point of the interval.
-    b (float): The end point of the interval.
-    n (int): The number of intervals to divide [a, b] into.
+    :param f: (function) The function to integrate.
+    :param a: (float) The start point of the interval.
+    :param b: (float) The end point of the interval.
+    :param n: (int) The number of intervals to divide [a, b] into.
 
-    Returns:
-    float: The numerical integral of f from a to b.
+    :return: float: The numerical integral of f from a to b.
     """
     # Calculate the width of each interval
     h = (b - a) / n
@@ -60,6 +57,16 @@ def trapezoidal_rule(f, a, b, n):
 
 
 def quadrature(f, a, b):
+    """
+    Numerically integrate the function f from a to b
+    using the quadrature rule.
+
+    :param f: (function) The function to integrate.
+    :param a: (float) The start point of the interval.
+    :param b: (float) The end point of the interval.
+
+    :return: float: The numerical integral of f from a to b.
+    """
     nodes = {0.0: 0.20948214108472782,
              -0.20778495500789848: 0.20443294007529889,
              0.20778495500789848: 0.20443294007529889,
@@ -80,22 +87,19 @@ def quadrature(f, a, b):
     return sum(w * f(m + h * n) for n, w in nodes.items()) * h
 
 
-def integrate(func, a, b):
-    return quadrature(func, a, b)
+integrate = quadrature
 
 
 def newton_raphson(f, a, tol=TOL, max_iter=MAX_ITER):
     """
     Newton-Raphson method to find the root of a function.
 
-    Parameters:
-    f : callable : function
-    a : float : Initial guess
-    tol : float : Tolerance for convergence
-    max_iter : int : Maximum number of iterations
+    :param f: (callable) function
+    :param a: (float) Initial guess
+    :param tol: (float) Tolerance for convergence
+    :param max_iter: (int) Maximum number of iterations
 
-    Returns:
-    x : float : The root of the function
+    :return: float : The root of the function
     """
     for i in range(max_iter):
         fa = f(a)
@@ -118,15 +122,13 @@ def bisection_method(f, a, b, tol=TOL, max_iter=MAX_ITER):
     """
     Bisection method to find the root of a function.
 
-    Parameters:
-    f : callable : function
-    a : float : Left endpoint of the initial interval
-    b : float : Right endpoint of the initial interval
-    tol : float : Tolerance for convergence
-    max_iter : int : Maximum number of iterations
+    :param f: (callable) function
+    :param a: (float) Left endpoint of the initial interval
+    :param b: (float) Right endpoint of the initial interval
+    :param tol: (float) Tolerance for convergence
+    :param max_iter: (int) Maximum number of iterations
 
-    Returns:
-    c : float : The root of the function
+    :return: float : The root of the function
     """
     if f(a) * f(b) >= 0:
         msg = f"The function must have opposite signs at {a=} and {b=}"
@@ -154,15 +156,13 @@ def secant_method(f, a, b, tol=TOL, max_iter=MAX_ITER):
     """
     Secant method to find the root of a function.
 
-    Parameters:
-    f : callable : function
-    a : float : First initial guess
-    b : float : Second initial guess
-    tol : float : Tolerance for convergence
-    max_iter : int : Maximum number of iterations
+    :param f: (callable) function
+    :param a: (float) First initial guess
+    :param b: (float) Second initial guess
+    :param tol: (float) Tolerance for convergence
+    :param max_iter: (int) Maximum number of iterations
 
-    Returns:
-    x2 : float : The root of the function
+    :return: float : The root of the function
     """
     for i in range(max_iter):
         # Calculate the value of the function at the initial guesses

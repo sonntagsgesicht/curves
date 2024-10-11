@@ -16,6 +16,16 @@ from .numerics import finite_difference, quadrature, EPS
 class Integral:
 
     def __init__(self, curve, a=0):
+        r"""integral of function
+
+        :param curve: (callable) function $f$ to integrate
+        :param a: (float) lower bound $a$ of integral
+
+        calculates the integral
+
+        $$F_a(x) = \int_a^x f(s) ds$$
+
+        """
         self.curve = curve
         self.a = a
 
@@ -33,6 +43,17 @@ class Integral:
 class Derivative:
 
     def __init__(self, curve, h=EPS):
+        r"""frist derivative of a function
+
+        :param curve: (callable) function $f$ to differentiate
+        :param h: (float) step size $\eta$ for finte differences (optional)
+
+        calculates the (first) derivative via finite differences
+
+        $$\frac{\partial f}{\partial x}
+        =f'(x)\approx\frac{f(x+\eta)-f(x)}{\eta}$$
+
+        """
         self.curve = curve
         self.h = h
 

@@ -11,22 +11,132 @@
 
 
 def init(curve):
-    if callable(curve):
+    """initialize Curve instance
+
+    :param curve: item to initialize,
+        i.e. turn into a |Curve| instance if **curve** isn't already one.
+    :return: |Curve| instance
+
+    >>> from curves import init
+
+    for functions
+
+    >>> from math import exp
+    >>> f = init(exp)
+    >>> f
+    exp
+
+    >>> type(f)
+    <class 'curves.curves.Curve'>
+
+    >>> f == exp
+    False
+
+    >>> f is init(f)
+    True
+
+    for functions numbers
+
+    >>> n = init(1.23)
+    >>> n
+    1.23
+
+    >>> type(n)
+    <class 'curves.curves.Curve'>
+
+    >>> n == 1.23
+    False
+
+    >>> n is init(n)
+    True
+
+    """
+    if isinstance(curve, Curve):
         return curve
-    if not isinstance(curve, (float, int)):
+    if callable(curve):
+        return Curve(curve)
+    if not isinstance(curve, (float, int, str)):
         cls = curve.__class__.__qualname__
         msg = f"float or callable required but type {cls} given"
         raise TypeError(msg)
-    return γ(curve)
+    return Curve(curve)
 
 
-class γ:
+class Curve:
 
-    def __init__(self, curve=None, /, *, op=None, other=None):
+    def __init__(self, curve=None, /, *, _op=None, _other=None):
+        """Curve object with algebraic operations
+
+        :param curve: inner curve or curve value or curve variable
+
+        This turns any function (aka curve) into an algebraic object
+        which can handle operators +, -, * , / and @.
+
+        >>> from curves import Curve
+
+        >>> eye = Curve()  # identity function
+        >>> eye(123.456)
+        123.456
+
+        >>> zero = Curve(0.0)  # constant function
+        >>> zero(123.456)
+        0.0
+
+        >>> one = Curve(1.0)
+        >>> one(123.456)
+        1.0
+
+        >>> X = Curve('X')  # variable
+        >>> X
+        X
+
+        >>> p = 2 * X ** 2 + 3 * X + 1
+        >>> p
+        2 * X ** 2 + 3 * X + 1
+
+        >>> p(123.456)
+        30854.135872
+
+        >>> q = p(X - 1)
+        >>> q
+        (2 * X ** 2 + 3 * X + 1)(X - 1)
+
+        >>> q1 = p @ (X - 1)
+        >>> q1
+        (2 * X ** 2 + 3 * X + 1)(X - 1)
+
+        >>> q2 = 2 * (X - 1) ** 2 + 3 * (X - 1) + 1
+        >>> q2
+        2 * (X - 1) ** 2 + 3 * (X - 1) + 1
+
+        >>> q(123.456)
+        30359.311872
+
+        >>> q1(123.456)
+        30359.311872
+
+        >>> q2(123.456)
+        30359.311872
+
+        and for constant curves
+
+        >>> int(Curve(1))
+        1
+
+        >>> float(Curve(1))
+        1.0
+
+        >>> int(Curve(1.7))
+        1
+
+        >>> float(Curve(1.7))
+        1.7
+
+        """
         self.curve = curve
         self._inplace_ops = []
-        self._op = op
-        self._other = other
+        self._op = _op
+        self._other = _other
 
     @staticmethod
     def _apply(op, other=None, x=None, y=None):
@@ -64,6 +174,50 @@ class γ:
             return s
         return f"({s})"
 
+    def _repr(self, /, *, sep='', x='r'):
+        if self.curve is None:
+            s = f"{self.__class__.__name__}()"
+        elif callable(self.curve):
+            s = f"{getattr(self.curve, '__name__', self.curve)}"
+        else:
+            s = f"{self.__class__.__name__}({self.curve})"
+
+        if isinstance(self.curve, (int, float, str)):
+            s = str(self.curve)
+
+        # for op, other in [(self._op, self._other)]  + self._inplace_ops:
+        for op, other in [(self._op, self._other)]:
+            if op == 'neg':
+                s = f"({sep}{s}{sep})" if '**' in s else self._embrace(s)
+                s = f"-{s}"
+            elif op == 'abs':
+                # s = f"|{s}|" if ... else f"abs({s})"
+                s = f"abs({sep}{s}{sep})" if x == 'r' or sep else f"|{s}|"
+            elif op == '@':
+                other = getattr(other, '__name__', repr(other))
+                s = self._embrace(s)
+                s = f"{s}({sep}{other}{sep})"
+            elif op == '**':
+                other = getattr(other, '__name__', repr(other))
+                other = self._embrace(other)
+                s = self._embrace(s)
+                s = f"{s}{sep} {op} {other}"
+            elif op == '*' or op == '/':
+                other = getattr(other, '__name__', repr(other))
+                other = self._embrace(other, '+-')
+                s = self._embrace(s, '+-')
+                s = f"{s}{sep} {op} {other}"
+            elif op is not None:
+                other = getattr(other, '__name__', repr(other))
+                s = f"{s}{sep} {op} {other}"
+
+        for op, other in self._inplace_ops:
+            if op not in '+-':
+                s = f"({s})"
+            other = getattr(other, '__name__', repr(other))
+            s = f"{s}{sep} {op} {other}"
+        return s
+
     def __call__(self, x):
         if not isinstance(x, (int, float)):
             return self @ x
@@ -90,80 +244,51 @@ class γ:
         return y
 
     def __eq__(self, other):
-        return repr(self) == repr(other)
+        return (repr(self) == repr(other)
+                and type(self) == type(other) and self.curve == other.curve)
 
     def __copy__(self):
-        new = self.__class__(self.curve, op=self._op, other=self._other)
+        new = self.__class__(self.curve, _op=self._op, _other=self._other)
         new._inplace_ops = list(self._inplace_ops)
         return new
 
-    def __repr__(self, /, *, sep=''):
-        if self.curve is None:
-            s = f"{self.__class__.__name__}()"
-        elif callable(self.curve):
-            s = f"{getattr(self.curve, '__name__', self.curve)}"
-        else:
-            s = f"{self.__class__.__name__}({self.curve})"
+    def __int__(self):
+        return int(self.curve)
 
-        if isinstance(self.curve, (int, float, str)):
-            s = str(self.curve)
+    def __float__(self):
+        return float(self.curve)
 
-        # for op, other in [(self._op, self._other)]  + self._inplace_ops:
-        for op, other in [(self._op, self._other)]:
-            if op == 'neg':
-                s = f"({s})" if '**' in s else self._embrace(s)
-                s = f"-{s}"
-            elif op == 'abs':
-                # s = f"|{s}|" if ... else f"abs({s})"
-                s = f"abs({s})"
-            elif op == '@':
-                other = getattr(other, '__name__', repr(other))
-                s = self._embrace(s)
-                s = f"{s}({other})"
-            elif op == '**':
-                other = getattr(other, '__name__', repr(other))
-                other = self._embrace(other)
-                s = self._embrace(s)
-                s = f"{s} {op} {other}"
-            elif op == '*' or op == '/':
-                other = getattr(other, '__name__', repr(other))
-                other = self._embrace(other, '+-')
-                s = self._embrace(s, '+-')
-                s = f"{s} {op} {other}"
-            elif op is not None:
-                other = getattr(other, '__name__', repr(other))
-                s = f"{s} {op} {other}"
+    def __str__(self):
+        s = self._repr(x='s')
+        return s if len(s) < 80 else self._repr(sep='\n', x='s')
 
-        for op, other in self._inplace_ops:
-            if op not in '+-':
-                s = f"({s})"
-            other = getattr(other, '__name__', repr(other))
-            s = f"{s} {op} {other}"
-        return s  # .replace('_', '-')
+    def __repr__(self):
+        s = self._repr()
+        return s if len(s) < 80 else self._repr(sep='\n')
 
     def __abs__(self):
-        return self.__class__(self, op='abs')
+        return self.__class__(self, _op='abs')
 
     def __neg__(self):
-        return self.__class__(self, op='neg')
+        return self.__class__(self, _op='neg')
 
     def __add__(self, other):
-        return self.__class__(self, op='+', other=init(other))
+        return self.__class__(self, _op='+', _other=init(other))
 
     def __sub__(self, other):
-        return self.__class__(self, op='-', other=init(other))
+        return self.__class__(self, _op='-', _other=init(other))
 
     def __mul__(self, other):
-        return self.__class__(self, op='*', other=init(other))
+        return self.__class__(self, _op='*', _other=init(other))
 
     def __truediv__(self, other):
-        return self.__class__(self, op='/', other=init(other))
+        return self.__class__(self, _op='/', _other=init(other))
 
     def __pow__(self, power, modulo=None):
-        return self.__class__(self, op='**', other=power)
+        return self.__class__(self, _op='**', _other=power)
 
     def __matmul__(self, other):
-        return self.__class__(self, op='@', other=init(other))
+        return self.__class__(self, _op='@', _other=init(other))
 
     def __radd__(self, other):
         cls = self.__class__
@@ -228,11 +353,3 @@ class γ:
     def __imatmul__(self, other):
         self._inplace_ops.append(('@', init(other)))
         return self
-
-    def clear(self):
-        self._op = None
-        self._other = None
-        self._inplace_ops.clear()
-
-
-Curve = γ
