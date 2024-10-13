@@ -4,9 +4,9 @@
 # ------
 # functional curve algebra (created by auxilium)
 #
-# Author:
-# Version:  0.1, copyright Thursday, 10 October 2024
-# Website:  https://github.com//curves
+# Author:   sonntagsgesicht
+# Version:  0.1.4, copyright Friday, 11 October 2024
+# Website:  https://github.com/sonntagsgesicht/curves
 # License:  Apache License 2.0 (see LICENSE file)
 
 
@@ -174,13 +174,16 @@ class Curve:
             return s
         return f"({s})"
 
-    def _repr(self, /, *, sep='', x='r'):
+    def _repr(self, /, *, sep='', use_repr=True):
+        r = repr if use_repr else str
         if self.curve is None:
             s = f"{self.__class__.__name__}()"
         elif callable(self.curve):
-            s = f"{getattr(self.curve, '__name__', self.curve)}"
+            s = f"{getattr(self.curve, '__name__', r(self.curve))!s}"
+        elif use_repr:
+            s = f"{self.__class__.__name__}({self.curve}!r)"
         else:
-            s = f"{self.__class__.__name__}({self.curve})"
+            s = f"{self.__class__.__name__}({self.curve}!s)"
 
         if isinstance(self.curve, (int, float, str)):
             s = str(self.curve)
@@ -191,30 +194,29 @@ class Curve:
                 s = f"({sep}{s}{sep})" if '**' in s else self._embrace(s)
                 s = f"-{s}"
             elif op == 'abs':
-                # s = f"|{s}|" if ... else f"abs({s})"
-                s = f"abs({sep}{s}{sep})" if x == 'r' or sep else f"|{s}|"
+                s = f"abs({sep}{s}{sep})" if use_repr or sep else f"|{s}|"
             elif op == '@':
-                other = getattr(other, '__name__', repr(other))
+                other = getattr(other, '__name__', r(other))
                 s = self._embrace(s)
                 s = f"{s}({sep}{other}{sep})"
             elif op == '**':
-                other = getattr(other, '__name__', repr(other))
+                other = getattr(other, '__name__', r(other))
                 other = self._embrace(other)
                 s = self._embrace(s)
                 s = f"{s}{sep} {op} {other}"
             elif op == '*' or op == '/':
-                other = getattr(other, '__name__', repr(other))
+                other = getattr(other, '__name__', r(other))
                 other = self._embrace(other, '+-')
                 s = self._embrace(s, '+-')
                 s = f"{s}{sep} {op} {other}"
             elif op is not None:
-                other = getattr(other, '__name__', repr(other))
+                other = getattr(other, '__name__', r(other))
                 s = f"{s}{sep} {op} {other}"
 
         for op, other in self._inplace_ops:
             if op not in '+-':
                 s = f"({s})"
-            other = getattr(other, '__name__', repr(other))
+            other = getattr(other, '__name__', r(other))
             s = f"{s}{sep} {op} {other}"
         return s
 
@@ -260,8 +262,8 @@ class Curve:
         return float(self.curve)
 
     def __str__(self):
-        s = self._repr(x='s')
-        return s if len(s) < 80 else self._repr(sep='\n', x='s')
+        s = self._repr(use_repr=False)
+        return s if len(s) < 80 else self._repr(sep='\n', use_repr=False)
 
     def __repr__(self):
         s = self._repr()
