@@ -21,8 +21,8 @@ __author__ = 'sonntagsgesicht'
 __email__ = 'sonntagsgesicht@icloud.com'
 __url__ = 'https://github.com/sonntagsgesicht/curves'
 
-__date__ = 'Sunday, 13 October 2024'
-__version__ = '0.1.4'
+__date__ = 'Sunday, 27 October 2024'
+__version__ = '0.1.5'
 __dev_status__ = '3 - Alpha'  # '4 - Beta'  or '5 - Production/Stable'
 
 __dependencies__ = ()
@@ -31,9 +31,11 @@ __data__ = ()
 __scripts__ = ()
 __theme__ = ''
 
-from .curves import Curve, init  # noqa F401 E402
 from . import functions  # noqa F401 E402
+from . import interpolation  # noqa F401 E402
 from . import numerics  # noqa F401 E402
+from .curves import Curve, init  # noqa F401 E402
+from .interpolation import fit  # noqa F401 E402
 from .operators import Integral, Derivative  # noqa F401 E402
 from .plot import plotter, plot, lin  # noqa F401 E402
 

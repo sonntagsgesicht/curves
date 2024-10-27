@@ -186,6 +186,60 @@ def secant_method(f, a, b, tol=TOL, max_iter=MAX_ITER):
     raise RuntimeError("Exceeded maximum iterations")
 
 
+def solve(f, method='secant_method', *args, **kwargs):
+    """solver providing function
+
+    :param f: (callable) function
+    :param method: (str or callable) solver method
+    :param args: **method** arguments
+    :param kwargs: **method** keyword arguments
+    :return:
+
+    """
+    if callable(method):
+        return method(f, *args, **kwargs)
+
+    # default method
+    method = str(method) if method else 'secant_method'
+
+    # gather arguments
+    guess = kwargs.get('guess', None)
+    a, b = kwargs.pop('bounds', (guess, None))
+    a = kwargs.pop('a', a)
+    b = kwargs.pop('b', b)
+    if a:
+        kwargs['a'] = a
+    if b:
+        kwargs['b'] = b
+
+    tol = kwargs.pop('tol', None)
+    tol = kwargs.pop('tolerance', tol)
+    tol = kwargs.pop('precision', tol)
+    if tol:
+        kwargs['tol'] = tol
+
+    if 'newton' in method:
+        if len(args) < 1:
+            kwargs['a'] = kwargs.get('a', 0.01)
+        return newton_raphson(f, *args, **kwargs)
+
+    if 'secant' in method:
+        if len(args) < 1:
+            kwargs['a'] = kwargs.get('a', 0.01)
+        if len(args) < 2:
+            kwargs['b'] = kwargs.get('b', 0.1)
+        return secant_method(f, *args, **kwargs)
+
+    if 'bisec' in method:
+        if len(args) < 1:
+            kwargs['a'] = kwargs.get('a', -0.1)
+        if len(args) < 2:
+            kwargs['b'] = kwargs.get('b', 0.2)
+        return bisection_method(f, *args, **kwargs)
+
+    raise ValueError(f"unknown method {method}")
+
+
 # Example usage integration
 if __name__ == "__main__":
     from math import exp, pi
