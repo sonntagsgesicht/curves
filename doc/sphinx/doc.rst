@@ -90,3 +90,9 @@ Numerical Operations
 ====================
 
 .. automodule::  curves.numerics
+
+
+Interpolations
+==============
+
+.. automodule::  curves.interpolation
