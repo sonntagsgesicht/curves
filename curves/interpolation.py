@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
-# yieldcurves
-# -----------
-# A Python library for financial yield curves.
+# curves
+# ------
+# functional curve algebra (created by auxilium)
 #
 # Author:   sonntagsgesicht
-# Version:  0.2.6.1, copyright Monday, 14 October 2024
-# Website:  https://github.com/sonntagsgesicht/yieldcurves
+# Version:  0.1.4, copyright Friday, 11 October 2024
+# Website:  https://github.com/sonntagsgesicht/curves
 # License:  Apache License 2.0 (see LICENSE file)
 
 
@@ -190,7 +190,7 @@ class flat(base_interpolation):
         $$f(x)=\hat{y}\text{ const.}$$
         for all $x$.
 
-        >>> from yieldcurves.interpolation import flat
+        >>> from curves.interpolation import flat
         >>> c = flat(1.1)
         >>> c(0)
         1.1
@@ -224,7 +224,7 @@ class _default_value_interpolation(base_interpolation):
         $$f(x)=y_i\text{ for } x=x_i$$
         and $d$ if no matching $x_i$ is found.
 
-        >>> from yieldcurves.interpolation import _default_value_interpolation
+        >>> from curves.interpolation import _default_value_interpolation
         >>> # c = _default_value_interpolation([1,2,3,1], [1,2,3,4], default_value=42)
         >>> c = _default_value_interpolation([1,2,3], [1,2,3], default_value=42)
         >>> c(1)
@@ -271,7 +271,7 @@ class no(_default_value_interpolation):
         with $i$ to be the first matching index such that $x=x_i$
         $$f(x)=y_i\text{ for } x=x_i \text{ else None}$$
 
-        >>> from yieldcurves.interpolation import no
+        >>> from curves.interpolation import no
         >>> # c = no([1,2,3,1], [1,2,3,4])
         >>> c = no([1,2,3], [1,2,3])
         >>> c(1)
@@ -298,7 +298,7 @@ class zero(_default_value_interpolation):
         $$f(x)=y_i\text{ for } x=x_i \text{ else } 0$$
 
 
-        >>> from yieldcurves.interpolation import zero
+        >>> from curves.interpolation import zero
         >>> # c = zero([1,2,3,1], [1,2,3,4])
         >>> c = zero([1,2,3], [1,2,3])
         >>> c(1)
@@ -328,7 +328,7 @@ class left(base_interpolation):
         $$f(x)=y_i\text{ for } x_i \leq x < x_{i+1}$$
         or $y_1$ if $x<x_1$.
 
-        >>> from yieldcurves.interpolation import left
+        >>> from curves.interpolation import left
         >>> c = left([1,3], [1,2])
         >>> c(0)
         1.0
@@ -379,7 +379,7 @@ class right(base_interpolation):
         $$f(x)=y_i\text{ for } x_i < x \leq x_{i+1}$$
         or $y_n$ if $x_n < x$.
 
-        >>> from yieldcurves.interpolation import right
+        >>> from curves.interpolation import right
         >>> c = right([1,3], [1,2])
         >>> c(0)
         1.0
@@ -417,7 +417,7 @@ class nearest(base_interpolation):
         with $i$ to be the matching index such that
         $$f(x)=y_i \text{ for } \mid x_i -x \mid  = \min_j \mid x_j -x \mid$$
 
-        >>> from yieldcurves.interpolation import nearest
+        >>> from curves.interpolation import nearest
         >>> c = nearest([1,2,3], [1,2,3])
         >>> c(0)
         1.0
@@ -462,7 +462,7 @@ class linear(base_interpolation):
         $y_i$ and $y_{i+1}$ when $x_i \leq x < x_{i+1}$, i.e.
         $$f(x)=(y_{i+1}-y_i) \cdot \frac{x-x_i}{x_{i+1}-x_i}$$
 
-        >>> from yieldcurves.interpolation import linear
+        >>> from curves.interpolation import linear
         >>> c = linear([1,2,3], [2,3,4])
         >>> c(0)
         1.0
@@ -511,7 +511,7 @@ class piecewise_linear(linear):
         $y_n$ if $x_n <x$.
 
 
-        >>> from yieldcurves.interpolation import piecewise_linear
+        >>> from curves.interpolation import piecewise_linear
         >>> c = piecewise_linear([1.,2.,3.], [2.,3.,4.])
         >>> c(0.)
         2.0
@@ -557,7 +557,7 @@ class loglinear(linear):
         \cdot \frac{x-x_i}{x_{i+1}-x_i}\Big)$$
 
         >>> from math import log, exp
-        >>> from yieldcurves.interpolation import loglinear
+        >>> from curves.interpolation import loglinear
         >>> c = loglinear([1,2,3], [exp(2),exp(3),exp(4)])
         >>> log(c(0))
         1.0
@@ -604,7 +604,7 @@ class loglinearrate(linear):
         \cdot \frac{x-x_i}{x_{i+1}-x_i}\Big)$$
 
         >>> from math import log, exp
-        >>> from yieldcurves.interpolation import loglinear
+        >>> from curves.interpolation import loglinear
         >>> c = loglinear([1,2,3], [exp(1*2),exp(2*3),exp(2*4)])
         >>> log(c(0))
         -2.0
@@ -656,7 +656,7 @@ class logconstantrate(constant):
         $$f(x)=\exp\Big(x \cdot \log(\frac{y_i}{x_i})\Big)$$
 
         >>> from math import log, exp
-        >>> from yieldcurves.interpolation import logconstantrate
+        >>> from curves.interpolation import logconstantrate
         >>> c = logconstantrate([1,2,3], [exp(1*2),exp(2*3),exp(2*4)])
         >>> log(c(1))
         2.0
