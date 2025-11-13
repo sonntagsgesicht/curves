@@ -23,5 +23,5 @@ htmlcov/
 *.json
 *.zip
 
-dev.*
+dev*.*
 /my

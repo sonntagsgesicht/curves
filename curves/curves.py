@@ -10,7 +10,7 @@
 # License:  Apache License 2.0 (see LICENSE file)
 
 
-def init(curve):
+def init(curve, /, *, id=''):
     """initialize Curve instance
 
     :param curve: item to initialize,
@@ -35,7 +35,7 @@ def init(curve):
     >>> f is init(f)
     True
 
-    for functions numbers
+    for numbers
 
     >>> n = init(1.23)
     >>> n
@@ -59,23 +59,46 @@ def init(curve):
         cls = curve.__class__.__qualname__
         msg = f"float or callable required but type {cls} given"
         raise TypeError(msg)
-    return Curve(curve)
+    return Curve(curve, id=id)
 
 
 def no_logging(*_):
     return
 
-_id = id
-
 
 class Curve:
 
+    _cache = {}
     logger = no_logging
+    """
+    logging function to enable logging of elementary instance operations
+    for instances with an **id** attribute
+
+    >>> from curves import Curve
+    >>> Curve.logger = print
+
+    >>> c = Curve(99, id='MyCurve')
+    Curve(99, id='MyCurve')
+
+    >>> _ = c(0)
+    99 = MyCurve(0)
+
+    >>> c.curve = 100
+    MyCurve = 100
+
+    >>> _ = float(c)
+    100.0 = float(MyCurve)
+
+    >>> c += 4
+    MyCurve += 4
+    """
 
     def __init__(self, curve=None, /, *, id='', _op=None, _other=None):
         """Curve object with algebraic operations
 
         :param curve: inner curve or curve value or curve variable
+        :param id: id of curve (optional), if given,
+            **id** must be unique for all curve instances
 
         This turns any function (aka curve) into an algebraic object
         which can handle operators +, -, * , / and @.
@@ -94,7 +117,7 @@ class Curve:
         >>> one(123.456)
         1.0
 
-        >>> X = Curve('X')  # variable
+        >>> X = Curve('X') # variable
         >>> X
         X
 
@@ -140,15 +163,40 @@ class Curve:
         >>> float(Curve(1.7))
         1.7
 
+        Using identifier argument **id**
+
+        >>> y = Curve(1., id='γ')
+        >>> str(y)
+        'γ'
+
+        but
+
+        >>> repr(y)
+        '1.0'
+
+        Any identifier must be unique for all curve instances
+
+        >>> Curve(2., id='γ')
+        Traceback (most recent call last):
+        ...
+        ValueError: Curve(γ) already defined
+
         """
+        if id in self._cache:
+            raise ValueError(f"Curve({id}) already defined")
         self.curve = curve
         self.id = id
         self._inplace_ops = []
         self._op = _op
         self._other = _other
+        if self.id:
+            self._cache[id] = self
+            _ops = f", _op={_op!r}, _other={_other}" if _op else ''
+            self.logger(f"{self.__class__.__name__}({curve}, id={id!r}{_ops})")
 
     @staticmethod
     def _apply(op, other=None, x=None, y=None):
+        other = (lambda _: _) if other is None else other
         try:
             match op:
                 case 'abs':
@@ -166,7 +214,7 @@ class Curve:
                 case '**':
                     return y ** other
                 case '@':
-                    return other(x)
+                    return other(y)
         except TypeError as e:
             raise TypeError(f"{y} {op} [{other}]({x}) failed for {e}")
 
@@ -200,7 +248,7 @@ class Curve:
                 s = f"({sep}{s}{sep})" if '**' in s else self._embrace(s)
                 s = f"-{s}"
             elif op == 'abs':
-                s = f"abs({sep}{s}{sep})" # if use_repr or sep else f"|{s}|"
+                s = f"abs({sep}{s}{sep})"  # if use_repr or sep else f"|{s}|"
             elif op == '@':
                 other = getattr(other, '__name__', r(other))
                 s = self._embrace(s)
@@ -245,10 +293,8 @@ class Curve:
             y = self._apply(op, other, x, y)
 
         for op, other in self._inplace_ops:
-            if op == '@':
-                y = self._apply(op, other, y)
-            else:
-                y = self._apply(op, other, x, y)
+            y = self._apply(op, other, x, y)
+
         if self.id:
             self.logger(f"{y} = {self.id}({x})")
         return y
@@ -266,12 +312,18 @@ class Curve:
 
     def __int__(self):
         y = int(self.curve)
+        if self._op or self._inplace_ops:
+            raise RuntimeError("Type casting does not work"
+                               " with assigned Operations.")
         if self.id:
             self.logger(f"{y} = int({self.id})")
         return y
 
     def __float__(self):
         y = float(self.curve)
+        if self._op or self._inplace_ops:
+            raise RuntimeError("Type casting does not work "
+                               "with assigned Operations.")
         if self.id:
             self.logger(f"{y} = float({self.id})")
         return y
@@ -330,7 +382,7 @@ class Curve:
                 return self
         self._inplace_ops.append(('+', init(other)))
         if self.id:
-            self.logger(f"{self.id} += {other}" )
+            self.logger(f"{self.id} += {other}")
         return self
 
     def __isub__(self, other):
@@ -341,7 +393,7 @@ class Curve:
                 return self
         self._inplace_ops.append(('-', init(other)))
         if self.id:
-            self.logger(f"{self.id} -= {other}" )
+            self.logger(f"{self.id} -= {other}")
         return self
 
     def __imul__(self, other):
@@ -352,7 +404,7 @@ class Curve:
                 return self
         self._inplace_ops.append(('*', init(other)))
         if self.id:
-            self.logger(f"{self.id} *= {other}" )
+            self.logger(f"{self.id} *= {other}")
         return self
 
     def __itruediv__(self, other):
@@ -363,22 +415,22 @@ class Curve:
                 return self
         self._inplace_ops.append(('/', init(other)))
         if self.id:
-            self.logger(f"{self.id} /= {other}" )
+            self.logger(f"{self.id} /= {other}")
         return self
 
     def __ipow__(self, other):
         self._inplace_ops.append(('**', other))
         if self.id:
-            self.logger(f"{self.id} **= {other}" )
+            self.logger(f"{self.id} **= {other}")
         return self
 
     def __imatmul__(self, other):
         self._inplace_ops.append(('@', init(other)))
         if self.id:
-            self.logger(f"{self.id} @= {other}" )
+            self.logger(f"{self.id} @= {other}")
         return self
 
-    def update(self, curve):
-        if self.id:
-            self.logger(f"{self.id}.update({curve})" )
-        self.curve = curve
+    def __setattr__(self, key, value):
+        if key == 'curve' and getattr(self, 'id', ''):
+            self.logger(f"{self.id} = {value}")
+        super().__setattr__(key, value)
