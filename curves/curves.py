@@ -62,9 +62,17 @@ def init(curve):
     return Curve(curve)
 
 
+def no_logging(*_):
+    return
+
+_id = id
+
+
 class Curve:
 
-    def __init__(self, curve=None, /, *, _op=None, _other=None):
+    logger = no_logging
+
+    def __init__(self, curve=None, /, *, id='', _op=None, _other=None):
         """Curve object with algebraic operations
 
         :param curve: inner curve or curve value or curve variable
@@ -134,6 +142,7 @@ class Curve:
 
         """
         self.curve = curve
+        self.id = id
         self._inplace_ops = []
         self._op = _op
         self._other = _other
@@ -174,27 +183,24 @@ class Curve:
             return s
         return f"({s})"
 
-    def _repr(self, /, *, sep='', use_repr=True):
-        r = repr if use_repr else str
+    def _repr(self, /, *, sep=''):
         if self.curve is None:
             s = f"{self.__class__.__name__}()"
         elif callable(self.curve):
-            s = f"{getattr(self.curve, '__name__', r(self.curve))!s}"
-        elif use_repr:
-            s = f"{self.__class__.__name__}({self.curve}!r)"
-        else:
-            s = f"{self.__class__.__name__}({self.curve}!s)"
-
-        if isinstance(self.curve, (int, float, str)):
+            s = f"{getattr(self.curve, '__name__', repr(self.curve))!s}"
+        elif isinstance(self.curve, (int, float, str)):
             s = str(self.curve)
+        else:
+            s = f"{self.__class__.__name__}({self.curve!r})"
 
         # for op, other in [(self._op, self._other)]  + self._inplace_ops:
+        r = repr
         for op, other in [(self._op, self._other)]:
             if op == 'neg':
                 s = f"({sep}{s}{sep})" if '**' in s else self._embrace(s)
                 s = f"-{s}"
             elif op == 'abs':
-                s = f"abs({sep}{s}{sep})" if use_repr or sep else f"|{s}|"
+                s = f"abs({sep}{s}{sep})" # if use_repr or sep else f"|{s}|"
             elif op == '@':
                 other = getattr(other, '__name__', r(other))
                 s = self._embrace(s)
@@ -243,10 +249,13 @@ class Curve:
                 y = self._apply(op, other, y)
             else:
                 y = self._apply(op, other, x, y)
+        if self.id:
+            self.logger(f"{y} = {self.id}({x})")
         return y
 
     def __eq__(self, other):
         return (repr(self) == repr(other)
+                and str(self) == str(other)
                 and type(self) == type(other)   # noqa E721
                 and self.curve == other.curve)
 
@@ -256,14 +265,19 @@ class Curve:
         return new
 
     def __int__(self):
-        return int(self.curve)
+        y = int(self.curve)
+        if self.id:
+            self.logger(f"{y} = int({self.id})")
+        return y
 
     def __float__(self):
-        return float(self.curve)
+        y = float(self.curve)
+        if self.id:
+            self.logger(f"{y} = float({self.id})")
+        return y
 
     def __str__(self):
-        s = self._repr(use_repr=False)
-        return s if len(s) < 80 else self._repr(sep='\n', use_repr=False)
+        return self.id if self.id else repr(self)
 
     def __repr__(self):
         s = self._repr()
@@ -294,24 +308,19 @@ class Curve:
         return self.__class__(self, _op='@', _other=init(other))
 
     def __radd__(self, other):
-        cls = self.__class__
-        return cls(other).__add__(self)
+        return self.__class__(other).__add__(self)
 
     def __rsub__(self, other):
-        cls = self.__class__
-        return cls(other).__sub__(self)
+        return self.__class__(other).__sub__(self)
 
     def __rmul__(self, other):
-        cls = self.__class__
-        return cls(other).__mul__(self)
+        return self.__class__(other).__mul__(self)
 
     def __rtruediv__(self, other):
-        cls = self.__class__
-        return cls(other).__truediv__(self)
+        return self.__class__(other).__truediv__(self)
 
     def __rmatmul__(self, other):
-        cls = self.__class__
-        return cls(other).__matmul__(self)
+        return self.__class__(other).__matmul__(self)
 
     def __iadd__(self, other):
         if self._inplace_ops:
@@ -320,6 +329,8 @@ class Curve:
                 self._inplace_ops.pop(-1)
                 return self
         self._inplace_ops.append(('+', init(other)))
+        if self.id:
+            self.logger(f"{self.id} += {other}" )
         return self
 
     def __isub__(self, other):
@@ -329,6 +340,8 @@ class Curve:
                 self._inplace_ops.pop(-1)
                 return self
         self._inplace_ops.append(('-', init(other)))
+        if self.id:
+            self.logger(f"{self.id} -= {other}" )
         return self
 
     def __imul__(self, other):
@@ -338,6 +351,8 @@ class Curve:
                 self._inplace_ops.pop(-1)
                 return self
         self._inplace_ops.append(('*', init(other)))
+        if self.id:
+            self.logger(f"{self.id} *= {other}" )
         return self
 
     def __itruediv__(self, other):
@@ -347,12 +362,23 @@ class Curve:
                 self._inplace_ops.pop(-1)
                 return self
         self._inplace_ops.append(('/', init(other)))
+        if self.id:
+            self.logger(f"{self.id} /= {other}" )
         return self
 
     def __ipow__(self, other):
         self._inplace_ops.append(('**', other))
+        if self.id:
+            self.logger(f"{self.id} **= {other}" )
         return self
 
     def __imatmul__(self, other):
         self._inplace_ops.append(('@', init(other)))
+        if self.id:
+            self.logger(f"{self.id} @= {other}" )
         return self
+
+    def update(self, curve):
+        if self.id:
+            self.logger(f"{self.id}.update({curve})" )
+        self.curve = curve
